@@ -17,13 +17,13 @@ class MainWindow(QMainWindow):
         self.height = 800
         self.sidebar_width = 200
         self.status_bar_height = 25
-        self.draw_area_size = [self.width,
-                               self.height - self.status_bar_height]
+        self.draw_area_size = [
+            self.width, self.height - self.status_bar_height
+        ]
 
-        self.figures_list = Figure.get_all()
-        self.selected_figure = self.figures_list[0]
+        self._selected_figure = Figure.get_all()[0]
 
-        self._reset_data()
+        self.reset_data()
         self.draw_area = DrawArea(self)
         self.sidebar = Sidebar(self)
         self._render_status_bar()
@@ -43,20 +43,53 @@ class MainWindow(QMainWindow):
         self._render_status_bar()
 
     def _render_status_bar(self):
-        message = Figure.get_by_name(self.selected_figure).get_help_text()
-        self.statusBar().showMessage(f'{self.selected_figure}: {message}')
+        message = self.get_figure_class().get_help_text()
+        self.statusBar().showMessage(f'{self._selected_figure}: {message}')
 
     def _update(self):
         self._render_status_bar()
         self.draw_area.update()
 
-    def _reset_data(self):
+    def _reset_fields_data(self):
+        FigureClass = self.get_figure_class()
+        self.data = FigureClass.default_values  # type: List[int]
+
+    ###############################################
+    #   Public Methods
+    ###############################################
+
+    def reset_data(self):
         self.figures = []   # type: List[Figure]
         self.points = []    # type: List[QPoint]
+        self._reset_fields_data()
+
         self.drawling = False
         if hasattr(self, 'draw_area'):
             self.draw_area.update()
+            self.sidebar.update()
 
-    def _add_figure(self):
-        FigureClass = Figure.get_by_name(self.selected_figure)
-        self.figures.append(FigureClass(self.points, self.draw_area_size))
+    def set_figure(self, figure):
+        self._selected_figure = figure
+        self._reset_fields_data()
+        self._update()
+
+    def get_figure_class(self):
+        return Figure.get_by_name(self._selected_figure)
+
+    def start_draw(self):
+        self.points = []
+        self.drawling = True
+        self._update()
+
+    def add_figure(self):
+        FigureClass = self.get_figure_class()
+
+        if (len(self.points) < FigureClass.get_min_points()):
+            return
+        self.figures.append(
+            FigureClass(self.points, self.data[:], self.draw_area_size))
+        self.drawling = False
+        self._update()
+
+    def handle_data_change(self, index, value):
+        self.data[index] = value

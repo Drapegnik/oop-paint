@@ -2,4 +2,6 @@ from enum import Enum
 
 
 class DrawMethod(Enum):
-    POINTS = 'POINTS'
+    POINTS_OPEN = 'POINTS_OPEN'
+    POINTS_CLOSED = 'POINTS_CLOSED'
+    ROUND = 'ROUND'

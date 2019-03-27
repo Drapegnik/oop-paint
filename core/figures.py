@@ -6,18 +6,32 @@ from core.constants import DrawMethod
 from core.utils import get_line, get_line_point
 
 
+@dataclass
+class Field:
+    name: str
+    step: int = 1
+    min_value: int = 0
+    max_value: int = None
+    default: int = None
+
+
+@dataclass
 class Figure:
     draw_method = None  # type: DrawMethod
     min_points = None   # type: int
-    points = None       # type: List[QPoint]
-    help_text = None    # type: string
-    draw_area_size = None     # type: List[int]
+    help_text = ''      # type: string
+    fields = []         # type: List[Field]
+    default_values = []  # type: List[int]
     _registry = {}
+
+    points: List[QPoint]
+    data: List
+    draw_area_size: List[int]
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         cls._registry[cls.__name__] = cls
-        print(f'Called __init_subclass({cls}, {cls.__name__})')
+        print(f'> register {cls.__name__}')
 
     @classmethod
     def get_all(cls) -> Tuple[Type['Figure']]:
@@ -39,26 +53,47 @@ class Figure:
     def get_min_points(self):
         return self.min_points
 
+    @classmethod
+    def get_fields(self) -> List[Field]:
+        return self.fields
+
     def get_points(self) -> List[QPoint]:
         return self.points
 
+    def get_data(self):
+        return self.data
 
-@dataclass
+
 class LineSegment(Figure):
-    draw_method = DrawMethod.POINTS
+    draw_method = DrawMethod.POINTS_OPEN
     min_points = 2
     help_text = f'put {min_points} dots to the drawing area'
 
-    points: List[QPoint]
-    draw_area_size: List[int]
-
 
 class Line(LineSegment):
-    def __init__(self, points, draw_area_size):
-        self.draw_area_size = draw_area_size
-        width, _ = self.draw_area_size
+    def __init__(self, points, _, draw_area_size):
+        width, _ = draw_area_size
         line = get_line(*points)
         self.points = [
             get_line_point(line, 0),
             get_line_point(line, width)
         ]
+
+
+class Ellipse(Figure):
+    draw_method = DrawMethod.ROUND
+    min_points = 1
+    default_values = [100, 200]
+    fields = list(map(lambda x: Field(x[0], 10, 0, 300, x[1]), zip(
+        ['radx', 'rady'], default_values)))
+    help_text = f'set radx, rady and choose center on the drawing area'
+
+
+class Circle(Ellipse):
+    default_values = [100]
+    fields = [Field('radius', 10, 0, 300, 100)]
+    help_text = f'set radius and choose center on the drawing area'
+
+    def __init__(self, points, data, _):
+        r = data[0]
+        Ellipse.__init__(self, points, [r, r], _)
