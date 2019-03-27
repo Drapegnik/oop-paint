@@ -1,6 +1,6 @@
 from functools import partial
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QFormLayout, QGroupBox, QLabel, QComboBox, QPushButton, QSpinBox
+    QWidget, QFormLayout, QGroupBox, QLabel, QComboBox, QPushButton, QSpinBox
 )
 
 from core.figures import Figure
@@ -20,9 +20,11 @@ class Sidebar(QWidget):
         self._add_reset()
 
         self.form = QGroupBox()
+        self.figures_list = QGroupBox()
         self.layout.addRow(QLabel(''))
 
         self._render_fields()
+        self._render_figures()
         self.setLayout(self.layout)
 
     def _add_select(self):
@@ -44,13 +46,12 @@ class Sidebar(QWidget):
             self.form.hide()
             return
 
-        if hasattr(self, 'form'):
-            self.form.hide()
-            self.layout.removeWidget(self.form)
+        self.form.hide()
+        self.layout.removeWidget(self.form)
         self.form = QGroupBox()
         self.form_layout = QFormLayout()
         self.form.setLayout(self.form_layout)
-        self.layout.addRow(self.form)
+        self.layout.insertRow(3, self.form)
 
         self.form.setTitle(f'{FigureClass.__name__} props:')
 
@@ -64,6 +65,23 @@ class Sidebar(QWidget):
             self.form_layout.addRow(QLabel(f'{field.name}:'), input)
         self.form.show()
 
+    def _render_figures(self):
+        self.figures_list.hide()
+        self.layout.removeWidget(self.figures_list)
+        self.figures_list = QGroupBox('Figures list:')
+        self.figures_layout = QFormLayout()
+        self.figures_list.setLayout(self.figures_layout)
+        self.layout.addRow(self.figures_list)
+
+        for index, fig in enumerate(self.parent.figures):
+            self.figures_layout.addRow(
+                QLabel(f'{index + 1}. {fig.__class__.__name__}'))
+        self.figures_list.show()
+
     def _handle_select(self, item):
         self.parent.set_figure(item)
         self._render_fields()
+
+    def _update(self):
+        self.update()
+        self._render_figures()

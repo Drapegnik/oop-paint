@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
     def _update(self):
         self._render_status_bar()
         self.draw_area.update()
+        self.sidebar._update()
 
     def _reset_fields_data(self):
         FigureClass = self.get_figure_class()
@@ -66,11 +67,12 @@ class MainWindow(QMainWindow):
         self.drawling = False
         if hasattr(self, 'draw_area'):
             self.draw_area.update()
-            self.sidebar.update()
+            self.sidebar._update()
 
     def set_figure(self, figure):
         self._selected_figure = figure
         self._reset_fields_data()
+        self._update()
 
     def get_figure_class(self):
         return Figure.get_by_name(self._selected_figure)
