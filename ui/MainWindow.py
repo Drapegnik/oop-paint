@@ -71,7 +71,6 @@ class MainWindow(QMainWindow):
     def set_figure(self, figure):
         self._selected_figure = figure
         self._reset_fields_data()
-        self._update()
 
     def get_figure_class(self):
         return Figure.get_by_name(self._selected_figure)
@@ -83,11 +82,12 @@ class MainWindow(QMainWindow):
 
     def add_figure(self):
         FigureClass = self.get_figure_class()
+        data_copy = self.data[:]
 
-        if (len(self.points) < FigureClass.get_min_points()):
+        if (len(self.points) < FigureClass.get_min_points(data_copy)):
             return
         self.figures.append(
-            FigureClass(self.points, self.data[:], self.draw_area_size))
+            FigureClass(self.points, data_copy, self.draw_area_size))
         self.drawling = False
         self._update()
 

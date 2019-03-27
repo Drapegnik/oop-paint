@@ -37,13 +37,17 @@ class DrawArea(QWidget):
         for fig in self.parent.figures:
             method = fig.__class__.get_draw_method()
             points = fig.get_points()
-            if method == DrawMethod.POINTS_OPEN:
-                for i in range(len(points) - 1):
-                    qp.drawLine(points[i], points[i + 1])
-            elif method == DrawMethod.ROUND:
+
+            if method == DrawMethod.ROUND:
                 center = points[0]
                 rad_x, rad_y = fig.get_data()
                 qp.drawEllipse(center, rad_x, rad_y)
+            else:
+                # POINTS
+                for i in range(len(points) - 1):
+                    qp.drawLine(points[i], points[i + 1])
+                if method == DrawMethod.POINTS_CLOSED:
+                    qp.drawLine(points[0], points[-1])
 
     def paintEvent(self, event):
         qp = QPainter()
@@ -58,3 +62,4 @@ class DrawArea(QWidget):
 
         self.parent.points.append(event.pos())
         self.parent.add_figure()
+        self.update()
