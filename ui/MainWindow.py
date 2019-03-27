@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QPoint
 
+from core.figures import Figure, LineSegment, Line
 from ui.Sidebar import Sidebar
 from ui.DrawArea import DrawArea
 
@@ -14,14 +16,17 @@ class MainWindow(QMainWindow):
         self.width = 1200
         self.height = 800
         self.sidebar_width = 200
+        self.status_bar_height = 25
+        self.draw_area_size = [self.width,
+                               self.height - self.status_bar_height]
 
-        # FIXME
-        self.figures_list = ['circle', 'rectangle', 'line']
+        self.figures_list = Figure.get_all()
         self.selected_figure = self.figures_list[0]
 
-        self.draw_area = DrawArea(self)
         self._reset_data()
+        self.draw_area = DrawArea(self)
         self.sidebar = Sidebar(self)
+        self._render_status_bar()
 
         self._init_ui()
         self.show()
@@ -34,13 +39,24 @@ class MainWindow(QMainWindow):
         self.sidebar.resize(self.sidebar_width, self.size().height())
 
         self.draw_area.move(self.sidebar_width, 0)
-        self.draw_area.resize(self.size())
+        self.draw_area.resize(*self.draw_area_size)
+        self._render_status_bar()
 
-        # self.statusBar().showMessage('Status: OK')
+    def _render_status_bar(self):
+        message = Figure.get_by_name(self.selected_figure).get_help_text()
+        self.statusBar().showMessage(f'{self.selected_figure}: {message}')
+
+    def _update(self):
+        self._render_status_bar()
+        self.draw_area.update()
 
     def _reset_data(self):
-        self.figures = []
-        self.points = []
+        self.figures = []   # type: List[Figure]
+        self.points = []    # type: List[QPoint]
         self.drawling = False
-        self.draw_area.update()
-        print('reset')
+        if hasattr(self, 'draw_area'):
+            self.draw_area.update()
+
+    def _add_figure(self):
+        FigureClass = Figure.get_by_name(self.selected_figure)
+        self.figures.append(FigureClass(self.points, self.draw_area_size))

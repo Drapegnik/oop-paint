@@ -31,4 +31,4 @@ class Sidebar(QWidget):
 
     def handle_select(self, item):
         self.parent.selected_figure = item
-        self.parent._reset_data()
+        self.parent._update()
