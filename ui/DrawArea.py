@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QMessageBox
 from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtCore import Qt
 
@@ -49,6 +49,13 @@ class DrawArea(QWidget):
                 if method == DrawMethod.POINTS_CLOSED:
                     qp.drawLine(points[0], points[-1])
 
+    def _show_limit_warning(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText('You have exceeded figures limit!')
+        msg.setInformativeText('Please remove some figures and try again.')
+        msg.exec_()
+
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
@@ -57,6 +64,10 @@ class DrawArea(QWidget):
         qp.end()
 
     def mousePressEvent(self, event):
+        if self.parent.is_figures_limit():
+            self._show_limit_warning()
+            return
+
         if not self.parent.drawling:
             self.parent.start_draw()
 

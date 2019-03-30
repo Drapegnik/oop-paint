@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QPoint
 
 from core.figures import Figure, LineSegment, Line
+from core.constants import MAX_FIGURES
 from ui.Sidebar import Sidebar
 from ui.DrawArea import DrawArea
 
@@ -93,5 +94,13 @@ class MainWindow(QMainWindow):
         self.drawling = False
         self._update()
 
+    def is_figures_limit(self):
+        return len(self.figures) >= MAX_FIGURES
+
     def handle_data_change(self, index, value):
         self.data[index] = value
+
+    def handle_figure_remove(self, index):
+        del self.figures[index]
+        self.points = []
+        self._update()

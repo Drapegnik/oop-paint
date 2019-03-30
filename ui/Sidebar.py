@@ -68,14 +68,23 @@ class Sidebar(QWidget):
     def _render_figures(self):
         self.figures_list.hide()
         self.layout.removeWidget(self.figures_list)
+
+        if not len(self.parent.figures):
+            return
+
         self.figures_list = QGroupBox('Figures list:')
         self.figures_layout = QFormLayout()
         self.figures_list.setLayout(self.figures_layout)
         self.layout.addRow(self.figures_list)
 
         for index, fig in enumerate(self.parent.figures):
+            button = QPushButton('x')
+            button.setToolTip('Remove')
+            button.clicked.connect(
+                partial(self.parent.handle_figure_remove, index))
             self.figures_layout.addRow(
-                QLabel(f'{index + 1}. {fig.__class__.__name__}'))
+                QLabel(f'{index + 1}. {fig.__class__.__name__}'), button)
+
         self.figures_list.show()
 
     def _handle_select(self, item):
