@@ -1,11 +1,13 @@
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QPoint
+from functools import partial
 
-from core.figures import Figure, LineSegment, Line
+from PyQt5.QtCore import QPoint
+from PyQt5.QtWidgets import QAction, QFileDialog, QMainWindow
+
 from core.constants import MAX_FIGURES
-from ui.Sidebar import Sidebar
+from core.figures import Figure, LineSegment
+from core.serializers import FigureEncoder
 from ui.DrawArea import DrawArea
+from ui.Sidebar import Sidebar
 
 
 class MainWindow(QMainWindow):
@@ -28,6 +30,7 @@ class MainWindow(QMainWindow):
         self.draw_area = DrawArea(self)
         self.sidebar = Sidebar(self)
         self._render_status_bar()
+        self._init_menu()
 
         self._init_ui()
         self.show()
@@ -47,10 +50,43 @@ class MainWindow(QMainWindow):
         message = self.get_figure_class().get_help_text()
         self.statusBar().showMessage(f'{self._selected_figure}: {message}')
 
+    def _init_menu(self):
+        menubar = self.menuBar()
+        file_menu = menubar.addMenu('File')
+
+        open_action = QAction('Open', self)
+        open_action.setShortcut('Ctrl+O')
+        open_action.triggered.connect(partial(self.handle_file_dialog, 'open'))
+        file_menu.addAction(open_action)
+
+        save_action = QAction('Save', self)
+        save_action.setShortcut('Ctrl+S')
+        save_action.triggered.connect(partial(self.handle_file_dialog, 'save'))
+        file_menu.addAction(save_action)
+
+    def handle_file_dialog(self, mode):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        file_dialog = QFileDialog.getOpenFileName if mode == 'open' else QFileDialog.getSaveFileName
+        filename, _ = file_dialog(
+            self, f'{mode.capitalize()} Figures File', 'dist/example.json', 'JSON (*.json)', options=options)
+        if filename:
+            handler = self._handle_open if mode == 'open' else self._handle_save
+            handler(filename)
+
+    def _handle_open(self, path):
+        with open(path, mode='r') as file:
+            self.figures = FigureEncoder.from_json(file.read())
+            self._update()
+
+    def _handle_save(self, path):
+        with open(path, mode='w') as file:
+            file.write(FigureEncoder.to_json(self.figures))
+
     def _update(self):
         self._render_status_bar()
         self.draw_area.update()
-        self.sidebar._update()
+        self.sidebar.update_ui()
 
     def _reset_fields_data(self):
         FigureClass = self.get_figure_class()
@@ -61,7 +97,8 @@ class MainWindow(QMainWindow):
     ###############################################
 
     def reset_data(self):
-        self.figures = []   # type: List[Figure]
+        # type: List[Figure]
+        self.figures = []
         self.points = []    # type: List[QPoint]
         self._reset_fields_data()
 

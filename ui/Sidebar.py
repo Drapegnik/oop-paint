@@ -1,7 +1,7 @@
 from functools import partial
-from PyQt5.QtWidgets import (
-    QWidget, QFormLayout, QGroupBox, QLabel, QComboBox, QPushButton, QSpinBox
-)
+
+from PyQt5.QtWidgets import (QComboBox, QFormLayout, QGroupBox, QLabel,
+                             QPushButton, QSpinBox, QWidget)
 
 from core.figures import Figure
 
@@ -36,13 +36,13 @@ class Sidebar(QWidget):
     def _add_reset(self):
         self.reset_btn = QPushButton('Reset')
         self.reset_btn.setDefault(True)
-        self.reset_btn.clicked.connect(lambda: self.parent.reset_data())
+        self.reset_btn.clicked.connect(self.parent.reset_data)
         self.layout.addRow(self.reset_btn)
 
     def _render_fields(self):
         FigureClass = self.parent.get_figure_class()
         fields = FigureClass.get_fields()
-        if not len(fields):
+        if not fields:
             self.form.hide()
             return
 
@@ -56,20 +56,20 @@ class Sidebar(QWidget):
         self.form.setTitle(f'{FigureClass.__name__} props:')
 
         for i, field in enumerate(fields):
-            input = QSpinBox()
-            input.setRange(field.min_value, field.max_value)
-            input.setSingleStep(field.step)
-            input.setValue(field.default)
-            input.valueChanged.connect(
+            input_f = QSpinBox()
+            input_f.setRange(field.min_value, field.max_value)
+            input_f.setSingleStep(field.step)
+            input_f.setValue(field.default)
+            input_f.valueChanged.connect(
                 partial(self.parent.handle_data_change, i))
-            self.form_layout.addRow(QLabel(f'{field.name}:'), input)
+            self.form_layout.addRow(QLabel(f'{field.name}:'), input_f)
         self.form.show()
 
     def _render_figures(self):
         self.figures_list.hide()
         self.layout.removeWidget(self.figures_list)
 
-        if not len(self.parent.figures):
+        if not self.parent.figures:
             return
 
         self.figures_list = QGroupBox('Figures list:')
@@ -91,6 +91,6 @@ class Sidebar(QWidget):
         self.parent.set_figure(item)
         self._render_fields()
 
-    def _update(self):
+    def update_ui(self):
         self.update()
         self._render_figures()

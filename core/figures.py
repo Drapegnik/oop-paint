@@ -1,6 +1,7 @@
-from typing import List, Tuple, Type
 from dataclasses import dataclass
-from PyQt5.QtCore import QPoint, QRect
+from typing import List, Tuple, Type
+
+from PyQt5.QtCore import QPoint
 
 from core.constants import DrawMethod
 from core.utils import get_line, get_line_point
@@ -34,6 +35,14 @@ class Figure:
         print(f'> register {cls.__name__}')
 
     @classmethod
+    def new(cls, points, data):
+        self = cls.__new__(cls)
+        self.points = list(map(lambda args: QPoint(*args), points))
+        self.data = data
+        self.draw_area_size = None
+        return self
+
+    @classmethod
     def get_all(cls) -> Tuple[Type['Figure']]:
         return tuple(cls._registry.keys())
 
@@ -56,6 +65,13 @@ class Figure:
     @classmethod
     def get_fields(cls) -> List[Field]:
         return cls.fields
+
+    def dict(self):
+        return {
+            'name': self.__class__.__name__,
+            'points': self.points,
+            'data': self.data
+        }
 
     def get_points(self) -> List[QPoint]:
         return self.points
@@ -139,7 +155,8 @@ class Rectangle(Figure):
 class Square(Rectangle):
     default = 100
     default_values = [default]
-    fields = [Field('side size', step=10, min_value=10, max_value=400, default=default)]
+    fields = [Field('side size', step=10, min_value=10,
+                    max_value=400, default=default)]
     help_text = f'set side size and choose center on the drawing area'
 
     def __init__(self, points, data, _):
