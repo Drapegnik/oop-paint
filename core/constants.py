@@ -8,3 +8,5 @@ class DrawMethod(Enum):
 
 
 MAX_FIGURES = 23
+
+PLUGINS_DIR = 'plugins'

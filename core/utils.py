@@ -1,3 +1,7 @@
+import os
+import sys
+from importlib import import_module
+
 from PyQt5.QtCore import QPoint
 
 
@@ -11,3 +15,15 @@ def get_y_from_x(line, x):
 
 def get_line_point(line, x):
     return QPoint(x, get_y_from_x(line, x))
+
+
+def load_plugins(path):
+    for root, _, files in os.walk(path):
+        if '__pycache__' in root:
+            continue
+        sys.path.append(root)
+        for filename in files:
+            if not filename.endswith('.py'):
+                continue
+            plugin = import_module(filename[:-3])
+            print(f'> load plugin: {plugin}')
