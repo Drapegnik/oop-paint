@@ -32,7 +32,7 @@ class Figure:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         cls._registry[cls.__name__] = cls
-        print(f'> register {cls.__name__}')
+        print(f'> [Figure]: register {cls.__name__}')
 
     @classmethod
     def new(cls, points, data):
@@ -43,7 +43,7 @@ class Figure:
         return self
 
     @classmethod
-    def get_all(cls) -> Tuple[Type['Figure']]:
+    def get_all(cls) -> Tuple[str]:
         return tuple(cls._registry.keys())
 
     @classmethod
@@ -69,8 +69,8 @@ class Figure:
     def dict(self):
         return {
             'name': self.__class__.__name__,
-            'points': self.points,
-            'data': self.data
+            'points': getattr(self, 'points', []),
+            'data': getattr(self, 'data', [])
         }
 
     def get_points(self) -> List[QPoint]:

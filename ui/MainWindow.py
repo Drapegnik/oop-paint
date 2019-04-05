@@ -5,10 +5,11 @@ from PyQt5.QtWidgets import QAction, QFileDialog, QMainWindow
 
 from core.constants import MAX_FIGURES
 from core.figures import Figure, LineSegment
-from core.serializers import FigureEncoder
+from core.serialization import FigureEncoder
+from core.processing import FileProcessor
+from core.utils import get_extensions
 from ui.DrawArea import DrawArea
 from ui.Sidebar import Sidebar
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -68,20 +69,39 @@ class MainWindow(QMainWindow):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         file_dialog = QFileDialog.getOpenFileName if mode == 'open' else QFileDialog.getSaveFileName
+        ext_string = get_extensions(FileProcessor.get_all())
         filename, _ = file_dialog(
-            self, f'{mode.capitalize()} Figures File', 'dist/example.json', 'JSON (*.json)', options=options)
+            self, f'{mode.capitalize()} Figures File', 'dist/example.json', ext_string, options=options)
         if filename:
             handler = self._handle_open if mode == 'open' else self._handle_save
             handler(filename)
 
     def _handle_open(self, path):
-        with open(path, mode='r') as file:
-            self.figures = FigureEncoder.from_json(file.read())
-            self._update()
+        data = None
+        processors = FileProcessor.get_all()
+        for p in processors:
+            if path.endswith(p.ext):
+                print('zip', p.ext)
+                with open(path, mode=p.r_fmt) as file:
+                    data = p.parse(file.read())
+                break
+        if not data:
+            with open(path, mode='r') as file:
+                data = file.read()
+        self.figures = FigureEncoder.from_json(data)
+        self._update()
 
     def _handle_save(self, path):
-        with open(path, mode='w') as file:
-            file.write(FigureEncoder.to_json(self.figures))
+        mode = 'w'
+        data = FigureEncoder.to_json(self.figures)
+        processors = FileProcessor.get_all()
+        for p in processors:
+            if path.endswith(p.ext):
+                mode = p.fmt
+                data = p.convert(data)
+                break
+        with open(path, mode) as file:
+            file.write(data)
 
     def _update(self):
         self._render_status_bar()

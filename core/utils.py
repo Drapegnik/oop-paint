@@ -27,3 +27,9 @@ def load_plugins(path):
                 continue
             plugin = import_module(filename[:-3])
             print(f'> load plugin: {plugin}')
+
+def get_extensions(processors):
+    separator = ';; '
+    default = ('JSON', '.json')
+    items = [default] + [p.get_data() for p in processors]
+    return separator.join(list(map(lambda x: f'{x[0]} (*{x[1]})', items)))
